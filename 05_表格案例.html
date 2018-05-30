@@ -62,7 +62,7 @@
                     <td>{{item.name}}</td>
                     <td>{{item.time | timeFmt('YYYY-MM-DD')}}</td>
                     <td>
-                        <a href="#" @click.prevent="">删除</a>
+                        <a href="#" @click.prevent="handleDel(item.id)">删除</a>
                     </td>
                 </tr>
                 <tr v-if="brandList.length === 0">
@@ -99,21 +99,35 @@
                     })
             },
             handleAdd() {
-                if(this.brandName.length === 0){
-                    return ;
+                if (this.brandName.length === 0) {
+                    return;
                 }
                 axios.post('http://localhost:3000/brands', {
                     name: this.brandName,
                     date: new Date()
-                }).then(res=>{
-                    if(res.status===201){
+                }).then(res => {
+                    if (res.status === 201) {
                         this.loadList();
                         this.brandName = '';
                         alert('添加成功');
                     }
-                }).catch(err=>{
+                }).catch(err => {
                     console.log(err)
                 })
+            },
+            handleDel(index) {
+                if(!confirm("您确认要删除吗？")){
+                    return
+                }
+                axios.delete(`http://localhost:3000/brands/${index}`)
+                    .then(res => {
+                        if (res.status === 200){
+                            this.loadList();
+                        }
+                    })
+                    .catch(err=>{
+                        console.log(err);
+                    })
             }
         },
         mounted() {
