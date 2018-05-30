@@ -33,6 +33,10 @@
             border: 1px solid black;
             margin-bottom: 10px;
         }
+
+        [v-cloak] {
+            display: none;
+        }
     </style>
 </head>
 
@@ -40,13 +44,13 @@
     <div id="app">
         <div class="add">
             品牌名称:
-            <input type="text" v-model.trim='brandName'>
+            <input v-focus type="text" v-model.trim='brandName'>
             <input type="button" value="添加" @click="handleAdd">
         </div>
 
         <div class="add">
             品牌名称:
-            <input type="text" placeholder="请输入搜索条件">
+            <input type="text" placeholder="请输入搜索条件" v-model="searchKey">
         </div>
 
         <div>
@@ -58,9 +62,9 @@
                     <th>操作</th>
                 </tr>
                 <tr v-for="(item,index) in brandList">
-                    <td>{{index+1}}</td>
-                    <td>{{item.name}}</td>
-                    <td>{{item.time | timeFmt('YYYY-MM-DD')}}</td>
+                    <td c-cloak>{{index+1}}</td>
+                    <td c-cloak>{{item.name}}</td>
+                    <td c-cloak>{{item.time | timeFmt('YYYY-MM-DD')}}</td>
                     <td>
                         <a href="#" @click.prevent="handleDel(item.id)">删除</a>
                     </td>
@@ -78,6 +82,11 @@
 <script>
     Vue.filter('timeFmt', (value, fmt) => {
         return moment(value).format(fmt);
+    })
+    Vue.directive('focus', {
+        inserted(el) {
+            el.focus();
+        }
     })
     new Vue({
         el: '#app',
@@ -116,18 +125,33 @@
                 })
             },
             handleDel(index) {
-                if(!confirm("您确认要删除吗？")){
+                if (!confirm("您确认要删除吗？")) {
                     return
                 }
                 axios.delete(`http://localhost:3000/brands/${index}`)
                     .then(res => {
-                        if (res.status === 200){
+                        if (res.status === 200) {
                             this.loadList();
                         }
                     })
-                    .catch(err=>{
+                    .catch(err => {
                         console.log(err);
                     })
+            }
+        },
+        watch:{
+            searchKey(newV,oldV){
+                axios.get('http://localhost:3000/brands',{
+                    params:{
+                        name_like:newV
+                    }
+                }).then(res=>{
+                    if(res.status===200){
+                        this.brandList=res.data
+                    }
+                }).catch(err=>{
+                    console.log(err)
+                })
             }
         },
         mounted() {
